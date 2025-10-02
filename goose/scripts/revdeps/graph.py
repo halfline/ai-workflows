@@ -1,12 +1,11 @@
 import logging
 from collections import deque
 from typing import Dict, List, Set, Any
+import importlib
 
 from revdeps.metrics import RepoQueryMetrics
 from revdeps.caches import SourcePackageCache, FilterCache, DependencyCache
 from revdeps.errors import NoDependentsFoundError
-from revdeps.filters import run_filter_command
-from revdeps.queries import generate_direct_dependents, query_source_package
 
 
 def compute_transitive_closure(
@@ -87,11 +86,11 @@ def build_dependents_list(
     logging.debug(f"   Max results: {max_results}")
     logging.debug(f"   Filter command: {filter_command}")
 
-    dependents = generate_direct_dependents(package_name, repository_paths, metrics, dependency_cache, verbose, cache_only=False)
+    pkg = importlib.import_module('revdeps')
+    dependents = pkg.generate_direct_dependents(package_name, repository_paths, metrics, dependency_cache, verbose, cache_only=False)
 
     if show_source_packages:
-        from revdeps.queries import convert_to_source_packages
-        dependents = convert_to_source_packages(
+        dependents = pkg.convert_to_source_packages(
             dependents, repository_paths, metrics, source_cache, filter_cache,
             max_results, verbose, filter_command, allow_missing
         )
@@ -108,7 +107,7 @@ def build_dependents_list(
             continue
 
         if filter_command:
-            if not run_filter_command(dependent_package, filter_command, metrics, filter_cache, verbose):
+            if not pkg.run_filter_command(dependent_package, filter_command, metrics, filter_cache, verbose):
                 logging.debug(f"   Skipping dependent package {dependent_package} due to filter command")
                 continue
 
@@ -146,6 +145,8 @@ def build_dependents_graph(
     logging.debug(f"   Max results: {max_results}")
     logging.debug(f"   Filter command: {filter_command}")
 
+    pkg = importlib.import_module('revdeps')
+
     known_packages: Set[str] = {root_package}
     queue = deque([root_package])
     dependents_map: Dict[str, Dict[str, Any]] = {}
@@ -157,12 +158,12 @@ def build_dependents_graph(
         dependents_list: List[str] = []
 
         any_filtered_dependents = False
-        for dependent in generate_direct_dependents(
+        for dependent in pkg.generate_direct_dependents(
                 package, repository_paths, metrics, dependency_cache, verbose,
                 cache_only=result_limit_hit
         ):
             if show_source_packages:
-                dependent = query_source_package(
+                dependent = pkg.query_source_package(
                     dependent,
                     repository_paths,
                     metrics,
@@ -180,7 +181,7 @@ def build_dependents_graph(
                 known_packages.add(dependent)
                 queue.append(dependent)
 
-            dependent_is_filtered = filter_command and not run_filter_command(
+            dependent_is_filtered = filter_command and not pkg.run_filter_command(
                 dependent,
                 filter_command,
                 metrics,

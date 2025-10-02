@@ -4,6 +4,7 @@ import re
 import shlex
 import signal
 import subprocess
+import importlib
 from typing import Dict, List, Any
 
 from revdeps.errors import RepoQueryError, EXIT_CACHE_UPDATE_ERROR
@@ -107,7 +108,9 @@ def dnf(command: str, repository_paths: Dict[str, str], verbose: bool = False, c
     for repository_id in repository_paths:
         full_command.append(f"--enablerepo=repo-{repository_id}")
 
-    result = run_command(full_command)
+    # Resolve run_command dynamically from the revdeps package to honor patches
+    pkg = importlib.import_module('revdeps')
+    result = pkg.run_command(full_command)
     return result["output"].strip()
 
 

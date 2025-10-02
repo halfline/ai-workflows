@@ -17,9 +17,16 @@ from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
 
 # Ensure package import path includes scripts directory
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+scripts_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, scripts_root)
 
 import revdeps as find_package_dependents
+import revdeps.runner as runner
+import revdeps.queries as queries
+import revdeps.graph as graph
+import revdeps.filters as filters
+import revdeps.repositories as repositories
+import revdeps.cli as cli
 
 
 @contextmanager

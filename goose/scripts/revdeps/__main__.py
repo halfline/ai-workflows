@@ -1,20 +1,15 @@
-from revdeps.cli import parse_command_line_arguments, set_up_logging, log_operation, collect_package_descriptions, generate_output, write_output, display_statistics
-from revdeps.metrics import RepoQueryMetrics
-from revdeps.caches import SourcePackageCache, FilterCache, DependencyCache
-from revdeps.repositories import build_repository_paths
-from revdeps.runner import update_dnf_cache
-from revdeps.graph import build_dependents_graph, build_dependents_list
-from revdeps.errors import RepoQueryError, NoDependentsFoundError, PackageNotFoundError
-
 import logging
 import sys
+import importlib
 
 
 def main() -> None:
-    args = parse_command_line_arguments()
-    set_up_logging(args.verbose, args.log_file)
+    pkg = importlib.import_module('revdeps')
 
-    log_operation(
+    args = pkg.parse_command_line_arguments()
+    pkg.set_up_logging(args.verbose, args.log_file)
+
+    pkg.log_operation(
         args.package_name,
         args.all,
         args.source_packages,
@@ -23,20 +18,20 @@ def main() -> None:
         args.output_file,
     )
 
-    repositories = build_repository_paths(args.base_url, args.repository_names, args.arch)
+    repositories = pkg.build_repository_paths(args.base_url, args.repository_names, args.arch)
     if not args.no_refresh:
-        update_dnf_cache(repositories, args.verbose)
+        pkg.update_dnf_cache(repositories, args.verbose)
     else:
         logging.info("⏭️  Skipping dnf cache update (using existing cache)")
 
-    metrics = RepoQueryMetrics()
-    source_cache = SourcePackageCache()
-    filter_cache = FilterCache()
-    dependency_cache = DependencyCache()
+    metrics = pkg.RepoQueryMetrics()
+    source_cache = pkg.SourcePackageCache()
+    filter_cache = pkg.FilterCache()
+    dependency_cache = pkg.DependencyCache()
 
     try:
         if args.all:
-            dependents_graph = build_dependents_graph(
+            dependents_graph = pkg.build_dependents_graph(
                 args.package_name,
                 repositories,
                 show_source_packages=args.source_packages,
@@ -60,7 +55,7 @@ def main() -> None:
                 }
                 dependents_data.append(package_entry)
         else:
-            dependents_data = build_dependents_list(
+            dependents_data = pkg.build_dependents_list(
                 args.package_name,
                 repositories,
                 show_source_packages=args.source_packages,
@@ -78,20 +73,20 @@ def main() -> None:
         package_descriptions = None
         if args.describe:
             logging.debug("🔄 Fetching package descriptions...")
-            package_descriptions = collect_package_descriptions(
+            package_descriptions = pkg.collect_package_descriptions(
                 args, repositories, metrics, dependents_data
             )
 
-        output_data = generate_output(args, dependents_data, package_descriptions)
-        write_output(output_data, args.output_file)
+        output_data = pkg.generate_output(args, dependents_data, package_descriptions)
+        pkg.write_output(output_data, args.output_file)
 
         if args.stats:
-            display_statistics(args.filter_command, metrics, source_cache, filter_cache, dependency_cache)
+            pkg.display_statistics(args.filter_command, metrics, source_cache, filter_cache, dependency_cache)
 
-    except RepoQueryError as error:
+    except pkg.RepoQueryError as error:
         logging.error("%s", error)
         sys.exit(error.exit_code)
-    except NoDependentsFoundError as error:
+    except pkg.NoDependentsFoundError as error:
         if args.allow_missing:
             logging.info("%s (continuing with empty results due to --allow-missing)", error)
             if args.all:
@@ -101,7 +96,7 @@ def main() -> None:
         else:
             logging.error("%s", error)
             sys.exit(error.exit_code)
-    except PackageNotFoundError as error:
+    except pkg.PackageNotFoundError as error:
         if args.allow_missing:
             logging.info("%s (continuing with empty results due to --allow-missing)", error)
             if args.all:

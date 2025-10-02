@@ -1,13 +1,12 @@
 import logging
 import re
 import subprocess
+import importlib
 from typing import Dict, List, Set, Generator, Any
 
 from revdeps.metrics import RepoQueryMetrics
 from revdeps.caches import SourcePackageCache, FilterCache, DependencyCache
 from revdeps.errors import RepoQueryError, PackageNotFoundError
-from revdeps.runner import dnf
-from revdeps.filters import run_filter_command
 
 
 def generate_direct_dependents(
@@ -41,7 +40,8 @@ def generate_direct_dependents(
 
     metrics.log_call("dnf repoquery --whatdepends", package_name)
     try:
-        stdout_content = dnf(f"repoquery --whatdepends {package_name} --qf '%{{name}}\\n'", repository_paths, verbose)
+        pkg = importlib.import_module('revdeps')
+        stdout_content = pkg.dnf(f"repoquery --whatdepends {package_name} --qf '%{{name}}\\n'", repository_paths, verbose)
     except subprocess.CalledProcessError as error:
         stderr = error.stderr.strip() if error.stderr else "Unknown error"
         raise RepoQueryError(
@@ -100,7 +100,8 @@ def query_source_package(
 
     metrics.log_call("dnf repoquery --qf '%{sourcerpm}'", package_name)
     try:
-        stdout_content = dnf(f"repoquery {package_name} --qf '%{{sourcerpm}}\\n'", repository_paths, verbose)
+        pkg = importlib.import_module('revdeps')
+        stdout_content = pkg.dnf(f"repoquery {package_name} --qf '%{{sourcerpm}}\\n'", repository_paths, verbose)
     except subprocess.CalledProcessError as error:
         stderr = error.stderr.strip() if error.stderr else "Unknown error"
         raise RepoQueryError(
@@ -143,7 +144,8 @@ def query_package_description(
 
     metrics.log_call("dnf repoquery --qf '%{description}'", package_name)
     try:
-        stdout_content = dnf(f"repoquery {package_name} --qf %{{description}}", repository_paths, verbose)
+        pkg = importlib.import_module('revdeps')
+        stdout_content = pkg.dnf(f"repoquery {package_name} --qf %{{description}}", repository_paths, verbose)
     except subprocess.CalledProcessError as error:
         stderr = error.stderr.strip() if error.stderr else "Unknown error"
         raise RepoQueryError(
@@ -175,6 +177,8 @@ def convert_to_source_packages(
     """
     logging.debug("🔄 Converting binary packages to source packages")
 
+    pkg = importlib.import_module('revdeps')
+
     source_packages: Set[str] = set()
     converted_count = 0
 
@@ -184,7 +188,7 @@ def convert_to_source_packages(
             break
 
         logging.debug(f"   Converting binary package: {package}")
-        source_package = query_source_package(
+        source_package = pkg.query_source_package(
             package, repository_paths, metrics, source_cache, verbose, allow_missing
         )
 
@@ -196,7 +200,7 @@ def convert_to_source_packages(
             source_packages.add(source_package)
 
             if filter_command:
-                if not run_filter_command(source_package, filter_command, metrics, filter_cache, verbose):
+                if not pkg.run_filter_command(source_package, filter_command, metrics, filter_cache, verbose):
                     logging.debug(f"   Skipping source package {source_package} due to filter command")
                     continue
 
