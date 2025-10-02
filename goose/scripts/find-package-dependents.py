@@ -53,15 +53,7 @@ from revdeps.runner import run_command
 
 from revdeps.runner import dnf
 
-def generate_direct_dependents(
-        package_name: str,
-        repository_paths: Dict[str, str],
-        metrics: RepoQueryMetrics,
-        dependency_cache: DependencyCache,
-        verbose: bool = False,
-        cache_only: bool = False,
-        max_results: int | None = None
-    ) -> Generator[str, None, None]:
+from revdeps.queries import generate_direct_dependents
     """
     Generator that yields direct dependents one at a time.
 
@@ -133,14 +125,7 @@ def generate_direct_dependents(
     logging.debug(f"\n   Total direct dependents found for {package_name}: {len(dependents_list)} ({'partial' if is_partial else 'complete'})")
 
 
-def query_source_package(
-        package_name: str,
-        repository_paths: Dict[str, str],
-        metrics: RepoQueryMetrics,
-        source_cache: SourcePackageCache,
-        verbose: bool = False,
-        allow_missing: bool = False
-    ) -> str:
+from revdeps.queries import query_source_package
     """
     Query the source package name for a given binary package.
 
@@ -202,12 +187,7 @@ def query_source_package(
     return source_package_name
 
 
-def query_package_description(
-        package_name: str,
-        repository_paths: Dict[str, str],
-        metrics: RepoQueryMetrics,
-        verbose: bool = False
-    ) -> str:
+from revdeps.queries import query_package_description
     """
     Query the description for a given package.
 
@@ -244,17 +224,7 @@ def query_package_description(
     return description
 
 
-def convert_to_source_packages(
-        dependents: Generator[str, None, None],
-        repository_paths: Dict[str, str],
-        metrics: RepoQueryMetrics,
-        source_cache: SourcePackageCache,
-        filter_cache: FilterCache,
-        max_results: int | None = None,
-        verbose: bool = False,
-        filter_command: str | None = None,
-        allow_missing: bool = False
-    ) -> Generator[str, None, None]:
+from revdeps.queries import convert_to_source_packages
     """
     Generator that converts a stream of binary package names into source package names.
 
