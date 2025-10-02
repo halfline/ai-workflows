@@ -508,136 +508,8 @@ from revdeps.graph import build_dependents_graph
     return dependents_graph
 
 
-def max_result_type(value: str) -> int:
-    """
-    Convert a string to an integer, failing if the value is not a positive integer.
-    """
-    try:
-        result = int(value)
-    except ValueError:
-        result = -1
-
-    if result <= 0:
-        raise argparse.ArgumentTypeError(f"result limit must be positive whole number, got: {value}")
-
-    return result
-
-
-def parse_command_line_arguments() -> argparse.Namespace:
-    """
-    Parse command line arguments for the package dependents finder.
-
-    Returns:
-        argparse.Namespace: Parsed command line arguments
-    """
-    parser = argparse.ArgumentParser(
-        description="Find reverse dependencies of an RPM package."
-    )
-    parser.add_argument(
-        "package_name",
-        help="Name of the package to inspect"
-    )
-    parser.add_argument(
-        "--base-url",
-        dest="base_url",
-        default="http://download.devel.redhat.com/rhel-10/nightly/RHEL-10/latest-RHEL-10",
-        help="Base URL for nightly repositories"
-    )
-    parser.add_argument(
-        "--repositories",
-        dest="repository_names",
-        default="BaseOS,AppStream,CRB",
-        help=(
-            "Comma-separated list of repository names (relative to base URL) "
-            "or full repository URLs.\\n"
-            "Examples:\n"
-            "  --repositories BaseOS,AppStream,CRB\n"
-            "  --repositories BaseOS,https://download.devel.redhat.com/rhel-10/nightly/RHEL-10/latest-RHEL-10/compose/RT/x86_64/os\n"
-        )
-    )
-    parser.add_argument(
-        "--arch",
-        choices=sorted(KNOWN_ARCHS),
-        dest="arch",
-        default="x86_64",
-        help="CPU architecture (for example: x86_64, s390x)"
-    )
-    parser.add_argument(
-        "--output-file",
-        dest="output_file",
-        type=Path,
-        help="Write output to this file instead of stdout"
-    )
-    parser.add_argument(
-        "--all",
-        action="store_true",
-        help="Include transitive reverse dependencies (default is direct only)"
-    )
-    parser.add_argument(
-        "--source-packages",
-        action="store_true",
-        help="Convert dependent package names to their source package names"
-    )
-    parser.add_argument(
-        "--max-results",
-        type=max_result_type,
-        help="Maximum number of results to return (limits both queries and output)"
-    )
-    parser.add_argument(
-        "--format",
-        choices=["json", "plain"],
-        default="plain",
-        help="Output format: json or plain (one per line)"
-    )
-    parser.add_argument(
-        "-v", "--verbose",
-        action="store_true",
-        help="Enable debug logging"
-    )
-
-    parser.add_argument(
-        "--no-refresh",
-        action="store_true",
-        help="Skip dnf cache update and use existing cache only"
-    )
-    parser.add_argument(
-        "--stats",
-        action="store_true",
-        help="Print detailed statistics about repoquery calls and cache usage"
-    )
-    parser.add_argument(
-        "--show-cycles",
-        action="store_true",
-        help="Show cycles in dependency graph"
-    )
-    parser.add_argument(
-        "--filter-command",
-        help="Optional shell command to run on each dependent package to filter results. "
-             "The command receives PACKAGE environment variable set to the package name. "
-             "If the command returns a non-zero exit code, the package is pruned from output. "
-             "Example: --filter-command 'echo $PACKAGE | grep -q \"^kernel$\"'"
-    )
-    parser.add_argument(
-        "--describe",
-        action="store_true",
-        help="Include package descriptions in output. For plain format, descriptions are appended to package names. "
-             "For JSON format, descriptions are added as a 'description' field to each package object."
-    )
-    parser.add_argument(
-        "--log-file",
-        type=Path,
-        help="Redirect all log output to this file instead of stderr"
-    )
-    parser.add_argument(
-        "--allow-missing",
-        action="store_true",
-        help="Allow missing packages to be non-fatal to operation. "
-             "If a package is not found in repositories, continue with empty results instead of exiting with error."
-    )
-    return parser.parse_args()
-
-
-from revdeps.repositories import build_repository_paths
+from revdeps.cli import max_result_type
+from revdeps.cli import parse_command_line_arguments
 
 
 def set_up_logging(verbose: bool, log_file: Path | None) -> None:
@@ -728,6 +600,9 @@ def set_up_repositories_and_cache(
     return repositories
 
 
+from revdeps.cli import collect_package_descriptions
+
+
 def collect_package_descriptions(
         arguments: argparse.Namespace,
         repositories: Dict[str, str],
@@ -770,6 +645,9 @@ def collect_package_descriptions(
     return package_descriptions
 
 
+from revdeps.cli import generate_output
+
+
 def generate_output(
         arguments: argparse.Namespace,
         dependents_data: List[Dict[str, Any]] | List[str],
@@ -790,6 +668,9 @@ def generate_output(
         return generate_json_output(arguments, dependents_data, package_descriptions)
     else:
         return generate_plain_output(arguments, dependents_data, package_descriptions)
+
+
+from revdeps.cli import generate_json_output
 
 
 def generate_json_output(
@@ -830,6 +711,9 @@ def generate_json_output(
                 output_array[0]["description"] = description
 
     return json.dumps(output_array, indent=2)
+
+
+from revdeps.cli import generate_plain_output
 
 
 def generate_plain_output(
@@ -876,6 +760,9 @@ def generate_plain_output(
         return "\n".join(collected_packages)
 
 
+from revdeps.cli import write_output
+
+
 def write_output(output_data: str, output_file: Path | None) -> None:
     """
     Write output to file or stdout.
@@ -889,6 +776,9 @@ def write_output(output_data: str, output_file: Path | None) -> None:
         output_file.write_text(output_data)
     else:
         print(output_data)
+
+
+from revdeps.cli import display_statistics
 
 
 def display_statistics(
