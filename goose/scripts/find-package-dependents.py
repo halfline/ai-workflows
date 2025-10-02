@@ -277,12 +277,7 @@ from revdeps.queries import convert_to_source_packages
     logging.debug(f"   Total unique source packages converted: {converted_count}")
 
 
-def compute_transitive_closure(
-        root_package: str,
-        dependents_map: Dict[str, Dict[str, Any]],
-        max_results: int | None = None,
-        filter_function = None,
-    ) -> Dict[str, Dict[str, Any]]:
+from revdeps.graph import compute_transitive_closure
     """
     Compute the transitive closure of the dependency graph.
 
@@ -360,20 +355,7 @@ def compute_transitive_closure(
     return graph
 
 
-def build_dependents_list(
-        package_name: str,
-        repository_paths: Dict[str, str],
-        show_source_packages: bool,
-        source_cache: SourcePackageCache,
-        metrics: RepoQueryMetrics,
-        filter_cache: FilterCache,
-        dependency_cache: DependencyCache,
-        max_results: int | None = None,
-        verbose: bool = False,
-        keep_cycles: bool = False,
-        filter_command: str | None = None,
-        allow_missing: bool = False
-    ) -> List[str]:
+from revdeps.graph import build_dependents_list
     """
     Build a list of dependents for a given package.
 
@@ -429,20 +411,7 @@ def build_dependents_list(
     return collected_packages
 
 
-def build_dependents_graph(
-        root_package: str,
-        repository_paths: Dict[str, str],
-        show_source_packages: bool,
-        source_cache: SourcePackageCache,
-        metrics: RepoQueryMetrics,
-        filter_cache: FilterCache,
-        dependency_cache: DependencyCache,
-        max_results: int | None = None,
-        keep_cycles: bool = False,
-        verbose: bool = False,
-        filter_command: str | None = None,
-        allow_missing: bool = False
-    ) -> Dict[str, Dict[str, Any]]:
+from revdeps.graph import build_dependents_graph
     """
     Build a transitive graph of reverse dependencies for the given package.
 
