@@ -1,24 +1,24 @@
 # This Containerfile contains several stages:
 #
 #     runtime-platform: Fedora base image with the required dependencies
-#     added on top to run goose.
+#     added on top to run revdeps_tester.
 #
 #     production: Official goose builds installed on top of runtime-platform
 #
-#     source-build: Fedora base image with goose built from
-#     git on top. It applies all the patches in goose/container
-#     as well. This is useful for instrumenting goose with
+#     source-build: Fedora base image with revdeps_tester built from
+#     git on top. It applies all the patches in revdeps_tester/container
+#     as well. This is useful for instrumenting revdeps_tester with
 #     extra debug logging, etc.
 #
-#     debug: Custom built Goose installed on top of runtime-platform
-#     This is useful for trying out the instrumented goose builds.
+#     debug: Custom built goose installed on top of runtime-platform
+#     This is useful for trying out the instrumented revdeps_tester builds.
 
 ARG BASE_IMAGE=registry.fedoraproject.org/fedora:42
 ARG GOOSE_VERSION=v1.1.3
 
 #
 # runtime-platform: Fedora base image with the required dependencies to added to
-# run goose.
+# run revdeps_tester.
 #
 FROM ${BASE_IMAGE} AS runtime-platform
 
@@ -33,26 +33,26 @@ RUN dnf install -y \
         centpkg \
         wget
 
-RUN useradd -m -G wheel goose \
+RUN useradd -m -G wheel revdeps_tester \
  && echo '%wheel ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/wheel-nopasswd \
- && mkdir -p /home/goose/.config/goose /home/goose/recipes /home/goose/scripts \
- && chown -R goose:goose /home/goose
+ && mkdir -p /home/revdeps_tester/.config/revdeps_tester /home/revdeps_tester/recipes /home/revdeps_tester/scripts \
+ && chown -R revdeps_tester:revdeps_tester /home/revdeps_tester
 
-COPY --chown=goose:goose \
-     goose/container/goose-config.yaml \
-     /home/goose/.config/goose/config.yaml
-COPY --chown=goose:goose \
-     goose/recipes/ \
-     /home/goose/recipes/
-COPY --chown=goose:goose \
-     goose/scripts/ \
-     /home/goose/scripts/
+COPY --chown=revdeps_tester:revdeps_tester \
+     revdeps_tester/container/goose-config.yaml \
+     /home/revdeps_tester/.config/revdeps_tester/config.yaml
+COPY --chown=revdeps_tester:revdeps_tester \
+     revdeps_tester/recipes/ \
+     /home/revdeps_tester/recipes/
+COPY --chown=revdeps_tester:revdeps_tester \
+     revdeps_tester/scripts/ \
+     /home/revdeps_tester/scripts/
 
-USER goose
-WORKDIR /home/goose
+USER revdeps_tester
+WORKDIR /home/revdeps_tester
 
 #
-# production: Official goose builds installed on top of runtime-platform
+# production: Official revdeps_tester builds installed on top of runtime-platform
 #
 FROM runtime-platform AS production
 
@@ -63,7 +63,7 @@ ARG GOOSE_VERSION
 RUN curl -fsSL https://github.com/block/goose/releases/download/${GOOSE_VERSION}/download_cli.sh | \
     GOOSE_BIN_DIR=/usr/local/bin CONFIGURE=false bash
 
-USER goose
+USER revdeps_tester
 
 ENTRYPOINT ["/usr/local/bin/goose"]
 
@@ -87,7 +87,7 @@ RUN git clone --depth 1 \
     goose-src
 
 WORKDIR /usr/src/goose-src
-COPY goose/container/*.patch patches/
+COPY revdeps_tester/container/*.patch patches/
 
 RUN cargo fetch --locked
 
@@ -100,7 +100,7 @@ RUN git am --empty=drop patches/*.patch \
  && cargo build --release -p goose-cli
 
 #
-# debug: Custom built Goose installed on top of runtime-platform
+# debug: Custom built revdeps_tester installed on top of runtime-platform
 #
 FROM runtime-platform AS debug
 COPY --from=source-build /usr/src/goose-src/target/release/goose /usr/local/bin/goose

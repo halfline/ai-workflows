@@ -16,14 +16,14 @@ The `recipes/` directory contains YAML workflow for testing reverse dependencies
 
 ## Usage
 
-Navigate to the goose directory and use the Makefile:
+Navigate to the revdeps_tester directory and use the Makefile:
 
 ```bash
 # Build the containers
 make build
 
-# Run interactive Goose session
-make run-goose
+# Run interactive revdeps_tester session
+make run-revdeps-tester
 
 # Run specific recipe
 make test-reverse-dependencies PACKAGE=podman
@@ -31,7 +31,7 @@ make test-reverse-dependencies PACKAGE=podman
 
 ## Configuration
 
-Edit `container/goose-config.yaml` to configure:
+Edit `container/revdeps_tester-config.yaml` to configure:
 - LLM provider and model settings
 - MCP server connections
 - Tool configurations
@@ -44,14 +44,14 @@ Edit `container/goose-config.yaml` to configure:
    ```
 
 2. **Configure your environment variables in `.secrets/`:**
-   - `goose.env` - Goose and API configurations
+   - `goose.env` - goose and API configurations
    - `mcp-testing-farm.env` - Testing Farm API token
    - `testing-farm-sse-bridge.env` - Testing Farm SSE Bridge configuration
 
 3. **Build and run:**
    ```bash
    make build
-   make run-goose
+   make run-revdeps-tester
    ```
 
 **Note**: This Goose-based automation is deprecated and will soon be replaced with a BeeAI based workflow.

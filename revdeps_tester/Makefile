@@ -8,10 +8,10 @@
 .PHONY: # Manage MCP server for Testing Farm
 .PHONY: run-mcp-testing-farm stop-mcp-testing-farm logs-mcp-testing-farm
 .PHONY:
-.PHONY: # Start Goose container without a specific recipe
-.PHONY: run-goose run-goose-bash
+.PHONY: # Start revdeps_tester container without a specific recipe
+.PHONY: run-revdeps-tester run-revdeps-tester-bash
 .PHONY:
-.PHONY: # Run Goose with specific recipes
+.PHONY: # Run revdeps_tester with specific recipes
 .PHONY: test-reverse-dependencies
 .PHONY:
 .PHONY: # Development and testing
@@ -43,17 +43,17 @@ stop-mcp-testing-farm:
 logs-mcp-testing-farm:
 	$(COMPOSE) logs -f mcp-testing-farm
 
-run-goose:
-	- $(COMPOSE) up -d goose
-	$(COMPOSE) exec goose goose
+run-revdeps-tester:
+	- $(COMPOSE) up -d revdeps_tester
+	$(COMPOSE) exec revdeps_tester goose
 
-run-goose-bash:
-	- $(COMPOSE) up -d goose
-	$(COMPOSE) exec goose bash
+run-revdeps-tester-bash:
+	- $(COMPOSE) up -d revdeps_tester
+	$(COMPOSE) exec revdeps_tester bash
 
 test-reverse-dependencies:
 	$(COMPOSE) run --rm \
-		--entrypoint /bin/sh goose \
+		--entrypoint /bin/sh revdeps_tester \
 		-c "/usr/local/bin/goose run --recipe recipes/test-reverse-dependencies.yaml \
 			--params arch=$(ARCH) \
 			--params package=$(PACKAGE) \
@@ -82,12 +82,12 @@ help:
 	@echo "Available targets:"
 	@echo "  config                      - Copy config templates to .secrets/ and .env"
 	@echo "  build                       - Build all images"
-	@echo "  debug-build                 - Build all images and rebuild goose from source"
+	@echo "  debug-build                 - Build all images and rebuild revdeps_tester from source"
 	@echo "  run-mcp-testing-farm        - Start testing-farm MCP server in background"
 	@echo "  stop-mcp-testing-farm       - Stop testing-farm MCP server"
 	@echo "  logs-mcp-testing-farm       - Show testing-farm MCP server logs"
-	@echo "  run-goose                   - Run goose interactively"
-	@echo "  run-goose-bash              - Run goose with bash shell"
+	@echo "  run-revdeps-tester         - Run revdeps_tester interactively"
+	@echo "  run-revdeps-tester-bash    - Run revdeps_tester with bash shell"
 	@echo "  test-reverse-dependencies   - Test all reverse dependencies of a package"
 	@echo "  check                       - Run all development tests"
 	@echo "  clean                       - Stop all services and clean volumes"

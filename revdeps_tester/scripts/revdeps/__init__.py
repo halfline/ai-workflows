@@ -17,7 +17,7 @@ from revdeps.errors import (
 	EXIT_PACKAGE_NOT_FOUND,
 )
 from revdeps.runner import quote_command, run_command, dnf, update_dnf_cache, get_signal_name
-from revdeps.repositories import KNOWN_ARCHS, build_repository_paths, derive_repository_id_from_url
+from revdeps.repositories import KNOWN_ARCHS, build_repository_paths, derive_repository_id_from_url, set_up_repositories_and_cache
 from revdeps.queries import (
 	generate_direct_dependents,
 	query_source_package,
@@ -66,6 +66,7 @@ __all__ = [
 	"KNOWN_ARCHS",
 	"build_repository_paths",
 	"derive_repository_id_from_url",
+	"set_up_repositories_and_cache",
 	"generate_direct_dependents",
 	"query_source_package",
 	"query_package_description",
