@@ -18,7 +18,7 @@ from urllib.parse import urlparse
 
 EXIT_SUCCESS = 0
 from revdeps.errors import EXIT_REPO_QUERY_ERROR, EXIT_NO_DEPENDENTS_FOUND, EXIT_INVALID_ARGUMENTS, EXIT_CACHE_UPDATE_ERROR, EXIT_PACKAGE_NOT_FOUND
-KNOWN_ARCHS: Set[str] = {"x86_64", "aarch64", "ppc64le", "s390x", "noarch"}
+from revdeps.repositories import KNOWN_ARCHS
 
 
 from revdeps.metrics import RepoQueryMetrics
@@ -43,39 +43,7 @@ from revdeps.filters import run_filter_command
 
 from revdeps.runner import update_dnf_cache
 
-def derive_repository_id_from_url(repository_url: str) -> str:
-    """
-    Derive a unique repository key from a full repository URL.
-
-    The algorithm is:
-    - Uses hostname[_port] as fallback if no suitable path segment is found
-    - Picks the last path segment that isn't 'os' or known architectures
-    - Appends first 16 hex chars of SHA-256 for uniqueness
-
-    Args:
-        repository_url: The full repository URL to derive an ID from
-
-    Returns:
-        A unique repository identifier string
-    """
-    parsed_url = urlparse(repository_url)
-
-    segments = [segment for segment in parsed_url.path.strip("/").split("/") if segment]
-
-    component = None
-    for segment in reversed(segments):
-        if segment == "os" or segment in KNOWN_ARCHS:
-            continue
-        component = segment
-        break
-
-    if not component:
-        host = parsed_url.hostname or ""
-        component = f"{host}_{parsed_url.port}" if parsed_url.port else host
-
-    component_safe = re.sub(r"[^A-Za-z0-9_]+", "_", component)
-    digest = sha256(repository_url.encode("utf-8")).hexdigest()[:16]
-    return f"{component_safe}_{digest}"
+from revdeps.repositories import derive_repository_id_from_url
 
 
 from revdeps.runner import get_signal_name
@@ -730,50 +698,7 @@ def parse_command_line_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def build_repository_paths(
-        base_url: str,
-        repository_names: str,
-        arch: str
-    ) -> Dict[str, str]:
-    """
-    Build repository paths from base URL and repository names.
-
-    Args:
-        base_url: Base URL for the repositories
-        repository_names: Comma-separated list of repository names or full URLs
-        arch: CPU architecture (e.g., 'x86_64', 'aarch64')
-
-    Returns:
-        Dictionary mapping repository IDs to their full URLs
-
-    Raises:
-        SystemExit: If no valid repositories are provided
-    """
-    repositories = [
-        repo.strip() for repo in repository_names.split(",")
-        if repo.strip()
-    ]
-    if not repositories:
-        logging.error("At least one repository alias or URL must be provided")
-        sys.exit(EXIT_INVALID_ARGUMENTS)
-
-    base = base_url.rstrip("/")
-    paths: Dict[str, str] = {}
-    for repository in repositories:
-        if repository.startswith(("http://", "https://")):
-            repository_url = repository.rstrip("/")
-            repository_id = derive_repository_id_from_url(repository_url)
-            paths[repository_id] = repository_url
-            continue
-
-        repository_id = repository
-        repository_url = f"{base}/compose/{repository}/{arch}/os/"
-        paths[repository_id] = repository_url
-
-        repository_id = repository + "-sources"
-        repository_url = f"{base}/compose/{repository}/source/tree/"
-        paths[repository_id] = repository_url
-    return paths
+from revdeps.repositories import build_repository_paths
 
 
 def set_up_logging(verbose: bool, log_file: Path | None) -> None:
