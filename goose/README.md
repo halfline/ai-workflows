@@ -1,6 +1,6 @@
-# Goose AI Agent Framework
+# Reverse Dependency Testing
 
-This directory contains all Goose AI related components for the AI Workflows platform.
+This directory contains all reverse dependency testing components for the AI Workflows platform.
 
 ## Container Builds
 
@@ -12,12 +12,7 @@ The `container/Containerfile` provides several build targets:
 
 ## Automation Recipes
 
-The `recipes/` directory contains YAML workflows for common RHEL engineering tasks:
-
-- **Issue Management**: Triage and analyze JIRA issues
-- **Package Operations**: Rebase packages, apply backport fixes
-- **Testing**: Run package tests and reverse dependency checks
-- **Repository Management**: Check tickets and analyze dependencies
+The `recipes/` directory contains YAML workflow for testing reverse dependencies of a package.
 
 ## Usage
 
@@ -30,10 +25,8 @@ make build
 # Run interactive Goose session
 make run-goose
 
-# Run specific recipes
-make triage-issue ISSUE=RHEL-12345
-make backport-fix PACKAGE=systemd BACKPORT_FIX="Fix memory leak"
-make rebase-package PACKAGE=curl VERSION=8.0.1
+# Run specific recipe
+make test-reverse-dependencies PACKAGE=podman
 ```
 
 ## Configuration
@@ -52,7 +45,6 @@ Edit `container/goose-config.yaml` to configure:
 
 2. **Configure your environment variables in `.secrets/`:**
    - `goose.env` - Goose and API configurations
-   - `mcp-atlassian.env` - Jira/Confluence access
    - `mcp-testing-farm.env` - Testing Farm API token
    - `testing-farm-sse-bridge.env` - Testing Farm SSE Bridge configuration
 
@@ -62,4 +54,4 @@ Edit `container/goose-config.yaml` to configure:
    make run-goose
    ```
 
-**Note**: This Goose-based automation is mostly unmaintained. For active development and production workflows, use the main BeeAI framework located in the repository root.
+**Note**: This Goose-based automation is deprecated and will soon be replaced with a BeeAI based workflow.
