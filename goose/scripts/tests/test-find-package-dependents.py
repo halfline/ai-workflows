@@ -1,6 +1,5 @@
-
 """
-Tests for find-package-dependents.py script.
+Tests for revdeps package (modularized find-package-dependents logic).
 """
 
 import argparse
@@ -17,12 +16,10 @@ from io import StringIO
 from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
 
+# Ensure package import path includes scripts directory
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import importlib.util
-spec = importlib.util.spec_from_file_location("find_package_dependents", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "find-package-dependents.py"))
-find_package_dependents = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(find_package_dependents)
+import revdeps as find_package_dependents
 
 
 @contextmanager
@@ -50,9 +47,9 @@ def captured_stderr():
 
 
 class TestFindPackageDependents(unittest.TestCase):
-    """🧪 Comprehensive test suite for find-package-dependents.py script.
+    """🧪 Comprehensive test suite for revdeps package.
 
-    Tests all functionality with mocked dnf commands to ensure the script works correctly
+    Tests all functionality with mocked dnf commands to ensure behavior
     without requiring actual system packages or network access.
     """
 

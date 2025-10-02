@@ -16,7 +16,7 @@ from revdeps.errors import (
 	EXIT_CACHE_UPDATE_ERROR,
 	EXIT_PACKAGE_NOT_FOUND,
 )
-from revdeps.runner import quote_command, run_command, dnf, update_dnf_cache
+from revdeps.runner import quote_command, run_command, dnf, update_dnf_cache, get_signal_name
 from revdeps.repositories import KNOWN_ARCHS, build_repository_paths, derive_repository_id_from_url
 from revdeps.queries import (
 	generate_direct_dependents,
@@ -31,6 +31,19 @@ from revdeps.graph import (
 )
 from revdeps.filters import run_filter_command
 from revdeps.client import ReverseDepsClient, list_direct_dependents, build_dependents_graph_client
+from revdeps.cli import (
+	max_result_type,
+	parse_command_line_arguments,
+	set_up_logging,
+	log_operation,
+	collect_package_descriptions,
+	generate_output,
+	generate_json_output,
+	generate_plain_output,
+	write_output,
+	display_statistics,
+)
+from revdeps.__main__ import main
 
 __all__ = [
 	"RepoQueryMetrics",
@@ -49,6 +62,7 @@ __all__ = [
 	"run_command",
 	"dnf",
 	"update_dnf_cache",
+	"get_signal_name",
 	"KNOWN_ARCHS",
 	"build_repository_paths",
 	"derive_repository_id_from_url",
@@ -63,4 +77,15 @@ __all__ = [
 	"ReverseDepsClient",
 	"list_direct_dependents",
 	"build_dependents_graph_client",
+	"max_result_type",
+	"parse_command_line_arguments",
+	"set_up_logging",
+	"log_operation",
+	"collect_package_descriptions",
+	"generate_output",
+	"generate_json_output",
+	"generate_plain_output",
+	"write_output",
+	"display_statistics",
+	"main",
 ]
