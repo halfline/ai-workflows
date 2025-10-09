@@ -172,14 +172,16 @@ def log_operation(
 
 
 def collect_package_descriptions(
-        arguments: argparse.Namespace,
+        package_name: str,
+        all_dependents: bool,
         repositories: Dict[str, str],
         metrics: RepoQueryMetrics,
-        dependents_data: List[Dict[str, Any]] | List[str]
+        dependents_data: List[Dict[str, Any]] | List[str],
+        verbose: bool
     ) -> Dict[str, str]:
     package_descriptions: Dict[str, str] = {}
 
-    if arguments.all:
+    if all_dependents:
         all_packages = set()
         for package_entry in dependents_data:
             all_packages.add(package_entry["package"])
@@ -187,14 +189,14 @@ def collect_package_descriptions(
 
         for package in all_packages:
             description = query_package_description(
-                package, repositories, metrics, arguments.verbose
+                package, repositories, metrics, verbose
             )
             package_descriptions[package] = description
     else:
-        all_packages_to_describe = [arguments.package_name] + dependents_data
+        all_packages_to_describe = [package_name] + dependents_data
         for package in all_packages_to_describe:
             description = query_package_description(
-                package, repositories, metrics, arguments.verbose
+                package, repositories, metrics, verbose
             )
             package_descriptions[package] = description
 
@@ -202,26 +204,31 @@ def collect_package_descriptions(
 
 
 def generate_output(
-        arguments: argparse.Namespace,
+        output_format: str,
+        all_dependents: bool,
+        package_name: str,
+        describe: bool,
         dependents_data: List[Dict[str, Any]] | List[str],
         package_descriptions: Dict[str, str] | None
     ) -> str:
-    if arguments.format == "json":
-        return generate_json_output(arguments, dependents_data, package_descriptions)
+    if output_format == "json":
+        return generate_json_output(all_dependents, package_name, describe, dependents_data, package_descriptions)
     else:
-        return generate_plain_output(arguments, dependents_data, package_descriptions)
+        return generate_plain_output(all_dependents, package_name, describe, dependents_data, package_descriptions)
 
 
 def generate_json_output(
-        arguments: argparse.Namespace,
+        all_dependents: bool,
+        package_name: str,
+        describe: bool,
         dependents_data: List[Dict[str, Any]] | List[str],
         package_descriptions: Dict[str, str] | None
     ) -> str:
-    if arguments.all:
+    if all_dependents:
         output_array = []
         for package_entry in dependents_data:
             package_obj = {"package": package_entry["package"]}
-            if arguments.describe and package_descriptions:
+            if describe and package_descriptions:
                 description = package_descriptions.get(package_entry["package"])
                 if description:
                     package_obj["description"] = description
@@ -231,10 +238,10 @@ def generate_json_output(
             output_array.append(package_obj)
     else:
         output_array = [
-            {"package": arguments.package_name, "dependents": dependents_data}
+            {"package": package_name, "dependents": dependents_data}
         ]
-        if arguments.describe and package_descriptions:
-            description = package_descriptions.get(arguments.package_name)
+        if describe and package_descriptions:
+            description = package_descriptions.get(package_name)
             if description:
                 output_array[0]["description"] = description
 
@@ -242,14 +249,16 @@ def generate_json_output(
 
 
 def generate_plain_output(
-        arguments: argparse.Namespace,
+        all_dependents: bool,
+        package_name: str,
+        describe: bool,
         dependents_data: List[Dict[str, Any]] | List[str],
         package_descriptions: Dict[str, str] | None
     ) -> str:
-    if arguments.all:
+    if all_dependents:
         root_package_entry = None
         for package_entry in dependents_data:
-            if package_entry["package"] == arguments.package_name:
+            if package_entry["package"] == package_name:
                 root_package_entry = package_entry
                 break
 
@@ -260,7 +269,7 @@ def generate_plain_output(
     else:
         collected_packages = dependents_data
 
-    if arguments.describe and package_descriptions:
+    if describe and package_descriptions:
         output_lines = []
         for package in collected_packages:
             description = package_descriptions.get(package)

@@ -74,10 +74,22 @@ def main() -> None:
         if args.describe:
             logging.debug("🔄 Fetching package descriptions...")
             package_descriptions = pkg.collect_package_descriptions(
-                args, repositories, metrics, dependents_data
+                args.package_name,
+                args.all,
+                repositories,
+                metrics,
+                dependents_data,
+                args.verbose,
             )
 
-        output_data = pkg.generate_output(args, dependents_data, package_descriptions)
+        output_data = pkg.generate_output(
+            args.format,
+            args.all,
+            args.package_name,
+            args.describe,
+            dependents_data,
+            package_descriptions,
+        )
         pkg.write_output(output_data, args.output_file)
 
         if args.stats:
